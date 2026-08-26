@@ -44,15 +44,19 @@ func (s GroupService) Add(ctx context.Context, gid, eid, org, actor string) erro
 	if e.Status != domain.EnrollmentAuthorized {
 		return domain.ErrConflict
 	}
-	return s.DB.Tx(ctx, func(tx *sql.Tx) error {
+	err = s.DB.Tx(ctx, func(tx *sql.Tx) error {
 		if err := s.Groups.AddMember(ctx, tx, gid, eid); err != nil {
 			return fmt.Errorf("group capacity: %w", err)
 		}
 		if _, err := tx.ExecContext(ctx, `UPDATE enrollments SET status='matched',updated_at=? WHERE id=? AND status='authorized'`, time.Now(), eid); err != nil {
 			return err
 		}
-		return s.Audit.Record(ctx, org, actor, "group", gid, "add_member", "ok", "")
+		return nil
 	})
+	if err != nil {
+		return err
+	}
+	return s.Audit.Record(ctx, org, actor, "group", gid, "add_member", "ok", "")
 }
 func (s GroupService) Members(ctx context.Context, gid string) ([]domain.GroupMember, error) {
 	return s.Groups.Members(ctx, gid)

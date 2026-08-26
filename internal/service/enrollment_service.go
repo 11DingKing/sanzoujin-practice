@@ -56,10 +56,13 @@ func (s EnrollmentService) Enroll(ctx context.Context, e domain.Enrollment, meth
 		if err := s.Enrollments.Create(ctx, e); err != nil {
 			return err
 		}
-		return s.Audit.Record(ctx, p.OrgID, e.StudentID, "enrollment", e.ID, "enroll", "ok", "")
+		return nil
 	})
 	if err != nil {
 		return e, fmt.Errorf("enroll transaction: %w", err)
+	}
+	if err = s.Audit.Record(ctx, p.OrgID, e.StudentID, "enrollment", e.ID, "enroll", "ok", ""); err != nil {
+		return e, fmt.Errorf("enrollment audit: %w", err)
 	}
 	if requestKey != "" {
 		b, _ := json.Marshal(e)
