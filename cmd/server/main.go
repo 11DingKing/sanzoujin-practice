@@ -1,12 +1,5 @@
 package main
 
-import (
-	"log"
-	"net/http"
-)
+import "github.com/11DingKing/sanzoujin-practice/internal/app"
 
-func main() {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
-	log.Fatal(http.ListenAndServe(":8080", mux))
-}
+func main() { app.Main() }
