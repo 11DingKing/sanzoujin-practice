@@ -48,13 +48,13 @@ func (s GroupService) Add(ctx context.Context, gid, eid, org, actor string) erro
 		if err := s.Groups.AddMember(ctx, tx, gid, eid); err != nil {
 			return fmt.Errorf("group capacity: %w", err)
 		}
+		if err := s.Enrollments.MarkMatched(ctx, tx, eid); err != nil {
+			return fmt.Errorf("mark enrollment matched: %w", err)
+		}
 		return nil
 	})
 	if err != nil {
 		return err
-	}
-	if err = s.Enrollments.MarkMatched(ctx, eid); err != nil {
-		return fmt.Errorf("mark enrollment matched: %w", err)
 	}
 	return s.Audit.Record(ctx, org, actor, "group", gid, "add_member", "ok", "")
 }

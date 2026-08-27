@@ -47,8 +47,10 @@ func (r EnrollmentRepo) SetStatus(ctx context.Context, id string, next domain.En
 }
 
 // MarkMatched persists the enrollment side of a group assignment.
-func (r EnrollmentRepo) MarkMatched(ctx context.Context, id string) error {
-	result, err := r.DB.ExecContext(ctx, `UPDATE enrollments SET status=?,updated_at=? WHERE id=? AND status=?`, domain.EnrollmentMatched, ts(time.Now()), id, domain.EnrollmentAuthorized)
+// It runs inside the caller's transaction so the group_members insert and the
+// status transition commit or roll back together.
+func (r EnrollmentRepo) MarkMatched(ctx context.Context, tx *sql.Tx, id string) error {
+	result, err := tx.ExecContext(ctx, `UPDATE enrollments SET status=?,updated_at=? WHERE id=? AND status=?`, domain.EnrollmentMatched, ts(time.Now()), id, domain.EnrollmentAuthorized)
 	if err != nil {
 		return err
 	}
